@@ -1,0 +1,60 @@
+<?php
+/**
+ * Folk server entry point for Yii 3 (extension mode).
+ *
+ * Uses HttpApplicationRunner for proper Yii3 bootstrap,
+ * then extracts the container for Folk handler registration.
+ */
+
+declare(strict_types=1);
+
+$autoload = $GLOBALS['_composer_autoload_path']
+    ?? dirname(__DIR__, 4) . '/vendor/autoload.php';
+
+if (!file_exists($autoload)) {
+    fwrite(STDERR, "folk-server: vendor/autoload.php not found.\n");
+    exit(1);
+}
+
+chdir(dirname($autoload, 2));
+
+require $autoload;
+
+// Yii3 bootstrap (loads .env, sets APP_ENV)
+$bootstrapFile = getcwd() . '/src/bootstrap.php';
+if (file_exists($bootstrapFile)) {
+    require_once $bootstrapFile;
+}
+
+$configPath = $argv[1] ?? 'folk.toml';
+
+if (!function_exists('folk_version')) {
+    fwrite(STDERR, "Error: folk extension is not loaded.\n");
+    exit(1);
+}
+
+if (!folk_is_worker_thread()) {
+    $server = new Folk\Server($configPath);
+    $server->start();
+}
+
+// Use HttpApplicationRunner for proper Yii3 bootstrap
+$runner = new \Yiisoft\Yii\Runner\Http\HttpApplicationRunner(
+    rootPath: getcwd(),
+    debug: (bool) ($_ENV['APP_DEBUG'] ?? false),
+    environment: $_ENV['APP_ENV'] ?? null,
+);
+
+$container = $runner->getContainer();
+
+// Register Folk handlers
+\Folk\Yii3\FolkBootstrap::register($container);
+
+// Enter worker loop
+$loop = new \Folk\Sdk\Worker\WorkerLoop();
+
+if (isset($GLOBALS['folk_worker_boot_hook'])) {
+    ($GLOBALS['folk_worker_boot_hook'])($loop);
+}
+
+$loop->run();
