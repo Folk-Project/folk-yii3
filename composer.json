@@ -10,10 +10,14 @@
     ],
     "require": {
         "php": ">=8.2",
-        "folk/sdk": "^0.2.4",
+        "folk/sdk": "^0.3.0",
         "psr/container": "^2.0",
         "psr/http-factory": "^1.0",
         "psr/http-server-handler": "^1.0"
+    },
+    "suggest": {
+        "yiisoft/log": "^2.0 — required for Yii3 logger context integration (request_id in app logs)",
+        "monolog/monolog": "^3.0 — required for FolkRequestIdProcessor (request_id in app logs)"
     },
     "require-dev": {
         "yiisoft/di": "^1.0",
