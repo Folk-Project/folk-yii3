@@ -30,7 +30,7 @@ final class FolkBootstrap
                     } elseif (
                         \class_exists(\Yiisoft\Log\Logger::class)
                         && $logger instanceof \Yiisoft\Log\Logger
-                        && \class_exists(\Yiisoft\Log\ContextProvider\ContextProviderInterface::class)
+                        && \interface_exists(\Yiisoft\Log\ContextProvider\ContextProviderInterface::class)
                     ) {
                         // yiisoft/log path — wrap the existing context provider so
                         // request_id is merged into every log record's context at
@@ -46,6 +46,7 @@ final class FolkBootstrap
                                     private readonly \Yiisoft\Log\ContextProvider\ContextProviderInterface $inner,
                                 ) {}
 
+                                /** @return array<string, mixed> */
                                 public function getContext(): array
                                 {
                                     $id = \Folk\Sdk\Folk::requestId();

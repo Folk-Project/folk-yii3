@@ -6,3 +6,4 @@ parameters:
         - stubs/folk_ext.php
         - stubs/cycle_orm.php
         - stubs/yii_di.php
+        - stubs/yii_log.php
