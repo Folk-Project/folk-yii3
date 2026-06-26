@@ -10,6 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Http\Message\UploadedFileFactoryInterface;
 use Yiisoft\Yii\Http\Application;
 
 final class YiiHttpHandler extends PsrHttpHandler
@@ -21,6 +22,10 @@ final class YiiHttpHandler extends PsrHttpHandler
         parent::__construct(
             $container->get(ServerRequestFactoryInterface::class),
             $container->get(StreamFactoryInterface::class),
+            $container->has(UploadedFileFactoryInterface::class)
+                ? $container->get(UploadedFileFactoryInterface::class)
+                : null,
+            (int) (getenv('FOLK_STREAM_MAX_BYTES') ?: 0),
         );
 
         $this->app = $container->get(Application::class);

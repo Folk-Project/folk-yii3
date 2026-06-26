@@ -91,6 +91,7 @@ final class FolkBootstrap
 
             // Resetters
             $loop->registerResetter(new Reset\ContainerResetter($container));
+            $loop->registerResetter(new \Folk\Sdk\Reset\TempUploadResetter());
 
             if ($container->has(\Cycle\ORM\ORMInterface::class)) {
                 $loop->registerResetter(new Reset\CycleResetter($container));
