@@ -6,6 +6,11 @@ namespace Folk\Yii3\Jobs;
 
 /**
  * Push jobs to Folk's jobs plugin via folk_call().
+ *
+ * @deprecated since 0.1.4 — prefer the native yiisoft/queue adapter
+ *             ({@see FolkQueueAdapter}) and inject `Yiisoft\Queue\QueueInterface`.
+ *             This bespoke helper remains as a low-level fallback for apps
+ *             without yiisoft/queue.
  */
 final class FolkQueue
 {

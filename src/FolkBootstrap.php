@@ -68,9 +68,29 @@ final class FolkBootstrap
                 new Handler\YiiHttpHandler($container),
             );
 
-            // Jobs handler
+            // Jobs handler — prefer the native yiisoft/queue bridge (run through
+            // the Yii Worker) when the queue package is installed and wired; fall
+            // back to the bespoke container-resolved handler otherwise.
+            $nativeJobs = null;
+            try {
+                if (
+                    \interface_exists(\Yiisoft\Queue\Worker\WorkerInterface::class)
+                    && $container->has(\Yiisoft\Queue\Worker\WorkerInterface::class)
+                    && $container->has(\Yiisoft\Queue\QueueInterface::class)
+                    && $container->has(\Yiisoft\Queue\Message\Serializer\MessageSerializerInterface::class)
+                ) {
+                    $nativeJobs = new Jobs\FolkQueueHandler(
+                        $container->get(\Yiisoft\Queue\Worker\WorkerInterface::class),
+                        $container->get(\Yiisoft\Queue\QueueInterface::class),
+                        $container->get(\Yiisoft\Queue\Message\Serializer\MessageSerializerInterface::class),
+                    );
+                }
+            } catch (\Throwable) {
+                $nativeJobs = null;
+            }
+
             $loop->registerJobsHandler(
-                new Jobs\YiiJobHandler($container),
+                $nativeJobs ?? new Jobs\YiiJobHandler($container),
             );
 
             // gRPC handler (if configured)
