@@ -1,9 +1,9 @@
 <?php
 /**
- * Folk server entry point for Yii 3 (extension mode).
+ * Folk server entry point for Yii 3 (extension mode, fork-after-warm).
  *
- * Uses HttpApplicationRunner for proper Yii3 bootstrap,
- * then extracts the container for Folk handler registration.
+ * Master: boot Yii3 once (HttpApplicationRunner) + register handlers, then
+ * serveForked() forks N worker processes (CoW-shared warm interpreter).
  */
 
 declare(strict_types=1);
@@ -33,12 +33,7 @@ if (!function_exists('folk_version')) {
     exit(1);
 }
 
-if (!folk_is_worker_thread()) {
-    $server = new Folk\Server($configPath);
-    $server->start();
-}
-
-// Use HttpApplicationRunner for proper Yii3 bootstrap
+// Bootstrap Yii3 once in the master via HttpApplicationRunner.
 $runner = new \Yiisoft\Yii\Runner\Http\HttpApplicationRunner(
     rootPath: getcwd(),
     debug: (bool) ($_ENV['APP_DEBUG'] ?? false),
@@ -50,11 +45,13 @@ $container = $runner->getContainer();
 // Register Folk handlers
 \Folk\Yii3\FolkBootstrap::register($container);
 
-// Enter worker loop
+// Create the worker loop and register handlers.
 $loop = new \Folk\Sdk\Worker\WorkerLoop();
 
 if (isset($GLOBALS['folk_worker_boot_hook'])) {
     ($GLOBALS['folk_worker_boot_hook'])($loop);
 }
 
-$loop->run();
+// Fork-after-warm: install the dispatch fn, then fork workers + supervise.
+$server = new Folk\Server($configPath);
+$server->serveForked($loop->prepareDispatch());
