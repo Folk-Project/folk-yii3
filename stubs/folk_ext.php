@@ -1,6 +1,7 @@
 <?php
 
 function folk_version(): string {}
+function folk_on_init(?string $config_path = null): void {}
 function folk_is_worker_thread(): bool {}
 function folk_worker_run(string $callback): void {}
 function folk_call(string $method, string $payload): string {}
